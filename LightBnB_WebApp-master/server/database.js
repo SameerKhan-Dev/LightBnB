@@ -2,6 +2,7 @@ const properties = require('./json/properties.json');
 const users = require('./json/users.json');
 
 const { Client } = require('pg');
+const { rows } = require('pg/lib/defaults');
 
 const pool = new Client( {
   user: 'vagrant',
@@ -21,6 +22,7 @@ pool.query(`
     //console.log(res.rows);
     return res.rows}).catch(err => console.log("Error is: " , err));
 */
+
 const getAllProperties = function(options, limit = 10) {
   console.log("Hello");
   return pool.query(`
@@ -152,14 +154,69 @@ exports.addUser = addUser;
 
 /// Reservations
 
+/*
+  Update getAllReservations function to use the lightbnb database with SQL queries.
+
+  - This function accepts a guest_id, limits the properties to 10 and returns a promise.
+  - The promise should resolve reservations for that user. Use the All My Reservations query that you
+   in a previous assignment. 
+
+
+
+
+
+*/
+
+const getAllReservations = function (guest_id, limit = 10) {
+
+  return pool.query(`
+
+    SELECT 
+    properties.id,
+    properties.owner_id,
+    properties.title,
+    properties.description,
+    properties.thumbnail_photo_url,
+    properties.cover_photo_url,
+    properties.cost_per_night,
+    properties.parking_spaces,
+    properties.number_of_bathrooms,
+    properties.number_of_bedrooms,
+    properties.country,
+    properties.street,
+    properties.city,
+    properties.post_code,
+    properties.active,
+    reservations.start_date, 
+    reservations.end_date, 
+    AVG(property_reviews.rating) as average_rating
+    
+    FROM properties
+    JOIN reservations ON properties.id = property_id
+    JOIN property_reviews ON property_reviews.property_id = properties.id
+    WHERE reservations.guest_id = $1 AND 
+    reservations.end_date < now()::date
+    GROUP BY properties.id, reservations.id
+    ORDER BY reservations.start_date ASC
+    LIMIT $2;
+  
+  `, [guest_id, limit])
+  .then(response => {
+    console.log(response.rows);
+    return response.rows;
+  });
+}
+
 /**
  * Get all reservations for a single user.
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
+/*
 const getAllReservations = function(guest_id, limit = 10) {
   return getAllProperties(null, 2);
 }
+*/
 exports.getAllReservations = getAllReservations;
 
 /// Properties
@@ -176,6 +233,7 @@ const getAllProperties = function(options, limit = 10) {
   for (let i = 1; i <= limit; i++) {
     limitedProperties[i] = properties[i];
   }
+  console.log("limited Properties is inside getAllProperties",limitedProperties);
   return Promise.resolve(limitedProperties);
 }
 */
