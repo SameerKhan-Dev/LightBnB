@@ -1,13 +1,73 @@
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
 
-/// Users
+const { Client } = require('pg');
 
+const pool = new Client( {
+  user: 'vagrant',
+  password: '123',
+  host:'localhost',
+  database:'lightbnb'
+});
+
+pool.connect().then(console.log("connected!")).catch(err => console.log("error on connection", err));
+/*
+pool.query(`
+  SELECT * FROM properties
+  LIMIT 10;
+  `)
+  .then(res => { 
+    console.log(res);
+    //console.log(res.rows);
+    return res.rows}).catch(err => console.log("Error is: " , err));
+*/
+const getAllProperties = function(options, limit = 10) {
+  console.log("Hello");
+  return pool.query(`
+  SELECT * FROM properties
+  LIMIT $1
+  `, [limit])
+  .then(res => { 
+    //console.log(res);
+    //console.log(res.rows);
+    return res.rows});
+}
+
+/// Users
+/*
+const getUserWithEmail = function(email) {
+
+  pool.query(``)
+  
+  
+  
+  .then(response => {
+
+
+  });
+
+}
+*/
+
+const getUserWithEmail = function (email) {
+
+  return pool.query(`
+    SELECT * FROM users
+    WHERE email = $1  
+  `,[email])
+  .then (response => {
+    if(response){
+      return response.rows[0];
+    }
+    return null;
+  });
+}
 /**
  * Get a single user from the database given their email.
  * @param {String} email The email of the user.
  * @return {Promise<{}>} A promise to the user.
  */
+/*
 const getUserWithEmail = function(email) {
   let user;
   for (const userId in users) {
@@ -20,30 +80,74 @@ const getUserWithEmail = function(email) {
   }
   return Promise.resolve(user);
 }
+*/
 exports.getUserWithEmail = getUserWithEmail;
+
+const getUserWithId = function(id) {
+
+  return pool.query(`
+    SELECT * FROM users
+    WHERE id = $1  
+  `,[id])
+  .then (response => {
+    if(response){
+      return response.rows[0];
+    }
+    return null;
+  });
+
+}
 
 /**
  * Get a single user from the database given their id.
  * @param {string} id The id of the user.
  * @return {Promise<{}>} A promise to the user.
  */
+/*
 const getUserWithId = function(id) {
   return Promise.resolve(users[id]);
 }
+*/
 exports.getUserWithId = getUserWithId;
 
+
+/*
+    addUser function:
+    - Accepts a user object that will have a name, email, and hashed password property.
+    - This function should insert the new user into the database.
+    - It will return a promise that resolves with the new user object. This object should contain the user's id after
+      its been added to the database.
+    - Add returning *; to the end of an INSERT query to return the objects that were inserted. This is
+      handy when you need the auto-generated id of an object you've just added to the database. 
+*/ 
+
+const addUser = function(user) {
+
+   return pool.query(`
+  
+    INSERT INTO users (name, email, password)
+    VALUES( $1 , $2, $3)
+    RETURNING *;
+  `,[user.name, user.email, user.password])
+    .then(response => {
+
+      return response.rows[0];
+    });
+};
 
 /**
  * Add a new user to the database.
  * @param {{name: string, password: string, email: string}} user
  * @return {Promise<{}>} A promise to the user.
  */
+/*
 const addUser =  function(user) {
   const userId = Object.keys(users).length + 1;
   user.id = userId;
   users[userId] = user;
   return Promise.resolve(user);
 }
+*/
 exports.addUser = addUser;
 
 /// Reservations
@@ -66,6 +170,7 @@ exports.getAllReservations = getAllReservations;
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
+/*
 const getAllProperties = function(options, limit = 10) {
   const limitedProperties = {};
   for (let i = 1; i <= limit; i++) {
@@ -73,6 +178,7 @@ const getAllProperties = function(options, limit = 10) {
   }
   return Promise.resolve(limitedProperties);
 }
+*/
 exports.getAllProperties = getAllProperties;
 
 
